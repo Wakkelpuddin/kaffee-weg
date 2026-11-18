@@ -138,7 +138,7 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
 <nav id="dots"></nav>
 <div id="miniqr"><img src="qr-mitmachen.svg" alt="QR-Code zum Mitmachen">mitmachen</div>
 <div id="hint">→ / Leertaste: weiter · ← zurück</div>
-<div id="admin"><button id="reset">Abstimmungen zurücksetzen</button></div>
+<div id="admin"><button id="reset">Abstimmungen zurücksetzen</button> <span id="sync" class="mut sm">📱 Handys folgen</span></div>
 
 <main>
 <!-- 0 · START -->
@@ -327,6 +327,20 @@ $('#url1').textContent = SITE.replace(/^https?:\/\//, '') + 'mitmachen.html';
 const scenes = $$('.scene');
 const sub = Object.fromEntries(scenes.map(s => [s.id, 0]));
 let cur = 0, latest = null;
+const key = new URLSearchParams(location.search).get('admin');
+let stT, lastSent = '';
+function sendStage() {
+  if (!key) return;
+  clearTimeout(stT);
+  stT = setTimeout(() => {
+    const s = scenes[cur].id, body = { scene: s, sub: sub[s] }, j = JSON.stringify(body);
+    if (j === lastSent) return; lastSent = j;
+    fetch(API + '/stage?key=' + encodeURIComponent(key), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: j })
+      .then(r => { $('#sync').textContent = r.ok ? '📱 Handys folgen: ' + scenes[cur].dataset.title : '📱 Sync-Fehler'; })
+      .catch(() => { $('#sync').textContent = '📱 offline'; lastSent = ''; });
+  }, 120);
+}
+setInterval(() => { lastSent = ''; sendStage(); }, 20000);
 
 // Navigation
 $('#dots').innerHTML = scenes.map((s, i) => `<a href="#${s.id}" data-i="${i}"><span>${s.dataset.title}</span></a>`).join('');
@@ -362,6 +376,7 @@ function render(id) {
   if (id === 'konsum') $('#konsum').classList.toggle('s1', k >= 1);
   if (id === 'kette') chain(k);
   if (id === 'kritik') $$('.kc').forEach((c, i) => c.classList.toggle('on', i <= k));
+  sendStage();
 }
 
 // 1 · Konsum: Zähler + Tassen-Punkte
@@ -405,15 +420,8 @@ function demand() {
 $('#dsl').oninput = $('#ssl').oninput = demand; demand();
 
 // 2 · Kette
-const ST = [
-  { p: [170, 330], t: 'Plantage', h: 'Anbau & Ernte', x: 'Kaffee wächst im <b>Kaffeegürtel</b> rund um den Äquator, in über 80 Ländern. Die erste Ernte gibt es erst nach 3–4 Jahren. Gepflückt wird per Hand (gut, aber mühsam) oder per Maschine (schnell, schadet aber Qualität und Bäumen). Für 1 kg Röstkaffee braucht man <b>7–8 kg Kaffeekirschen</b>.' },
-  { p: [255, 255], t: 'Aufbereitung', h: 'Aufbereitung & Zwischenhandel', x: 'Fruchtfleisch weg, Bohnen trocknen: <b>trocken, „honey“ oder nass</b> – das prägt den Geschmack. Zwischenhändler kaufen die Bohnen bei den Bauern auf.' },
-  { p: [345, 300], t: 'Hafen', h: 'Export', x: 'Als <b>grüner Rohkaffee</b> geht es per Containerschiff über den Atlantik – z. B. nach Hamburg, einem der wichtigsten Kaffeehäfen Europas.' },
-  { p: [700, 175], t: 'Rösterei', h: 'Rösten in Deutschland', x: 'Geröstet wird meist <b>erst hier</b>, bei 200–220 °C. Warum? Rohkaffee ist in der EU zollfrei, Röstkaffee aus Ländern wie Brasilien nicht (7,5 % Zoll). So bleibt dieser Teil der Wertschöpfung im Norden.' },
-  { p: [790, 240], t: 'Steuer', h: 'Kaffeesteuer', x: 'Deutschland erhebt eine eigene <b>Kaffeesteuer: 2,19 € pro kg</b> Röstkaffee. Das Geld geht an den Staat.' },
-  { p: [860, 310], t: 'Supermarkt', h: 'Handel & Verkauf', x: 'Groß- und Einzelhandel verdienen am Verkauf im Laden.' },
-  { p: [810, 375], t: 'Sonstiges', h: 'Und der Rest?', x: 'Mehrwertsteuer, Transport im Inland, Verpackung, Werbung … – in der Quelle nicht einzeln aufgeschlüsselt.' },
-];
+const POS = [[170, 330], [255, 255], [345, 300], [700, 175], [790, 240], [860, 310], [810, 375]];
+const ST = STATIONS.map((s, i) => ({ ...s, p: POS[i] }));
 const routeD = 'M170 330 Q205 285 255 255 T345 300 C420 360 560 120 700 175 Q760 195 790 240 Q830 270 860 310 Q850 350 810 375';
 $('#route').setAttribute('d', routeD); $('#routeBg').setAttribute('d', routeD);
 const R = $('#route'), RL = R.getTotalLength();
@@ -480,7 +488,6 @@ async function refresh() {
 }
 refresh(); setInterval(() => { if (!document.hidden) refresh(); }, 2000);
 
-const key = new URLSearchParams(location.search).get('admin');
 if (key) { $('#admin').style.display = 'block'; $('#reset').onclick = async () => { if (confirm('Alle Stimmen löschen?')) { await fetch(API + '/reset?key=' + encodeURIComponent(key), { method: 'POST' }); refresh(); } }; }
 </script>
 </body>

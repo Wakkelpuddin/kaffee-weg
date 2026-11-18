@@ -91,3 +91,19 @@ function gauge(el, v, label) {
   el.innerHTML = `<div class="g-bar"><i style="width:${v}%"></i></div><div class="g-l"><span>${label}</span><b>${v}</b></div>`;
   el.style.setProperty('--h', Math.round(v * 1.2));
 }
+
+// Stationen der Wertschöpfungskette (Tafel + Handy)
+const STATIONS = [
+  { t: 'Plantage', h: 'Anbau & Ernte', x: 'Kaffee wächst im <b>Kaffeegürtel</b> rund um den Äquator, in über 80 Ländern. Die erste Ernte gibt es erst nach 3–4 Jahren. Gepflückt wird per Hand (gut, aber mühsam) oder per Maschine (schnell, schadet aber Qualität und Bäumen). Für 1 kg Röstkaffee braucht man <b>7–8 kg Kaffeekirschen</b>.' },
+  { t: 'Aufbereitung', h: 'Aufbereitung & Zwischenhandel', x: 'Fruchtfleisch weg, Bohnen trocknen: <b>trocken, „honey“ oder nass</b> – das prägt den Geschmack. Zwischenhändler kaufen die Bohnen bei den Bauern auf.' },
+  { t: 'Hafen', h: 'Export', x: 'Als <b>grüner Rohkaffee</b> geht es per Containerschiff über den Atlantik – z. B. nach Hamburg, einem der wichtigsten Kaffeehäfen Europas.' },
+  { t: 'Rösterei', h: 'Rösten in Deutschland', x: 'Geröstet wird meist <b>erst hier</b>, bei 200–220 °C. Warum? Rohkaffee ist in der EU zollfrei, Röstkaffee aus Ländern wie Brasilien nicht (7,5 % Zoll). So bleibt dieser Teil der Wertschöpfung im Norden.' },
+  { t: 'Steuer', h: 'Kaffeesteuer', x: 'Deutschland erhebt eine eigene <b>Kaffeesteuer: 2,19 € pro kg</b> Röstkaffee. Das Geld geht an den Staat.' },
+  { t: 'Supermarkt', h: 'Handel & Verkauf', x: 'Groß- und Einzelhandel verdienen am Verkauf im Laden.' },
+  { t: 'Sonstiges', h: 'Und der Rest?', x: 'Mehrwertsteuer, Transport im Inland, Verpackung, Werbung … – in der Quelle nicht einzeln aufgeschlüsselt.' },
+];
+const KRITIK = [
+  { ic: '🌳', h: 'Umwelt', li: ['<b>13 Mio. Hektar</b> Kaffeefelder – so groß wie England', '20 Jahre lang je <b>≈ 130.000 ha Wald</b> pro Jahr gerodet – oft in artenreichen Gebieten', '<b>38 Mio. kg Pestizide</b> pro Jahr allein in Brasilien', 'Eine Tasse schwarzer Kaffee: <b>280 l Wasser</b> und <b>0,35 kg CO₂</b>'] },
+  { ic: '🧑‍🌾', h: 'Menschen', li: ['Mind. <b>5,5 Mio. Kaffeebauern</b> leben unter der Armutsgrenze (3,20 $ am Tag)', '<b>Kinder- und Zwangsarbeit</b>: laut ILO einer der Sektoren mit den meisten Kinderarbeitenden', 'Pestizide machen krank: Atemwege, Haut, Herz, Krebs', '<b>Landraub</b>: 2001 wurden in Uganda ca. 4.000 Menschen für eine Plantage vertrieben'] },
+  { ic: '⚖️', h: 'System', li: ['<b>Nord-Süd-Gefälle</b>: ≈ 88 % des Ladenpreises bleiben in Deutschland', '<b>Zolleskalation</b>: Rohkaffee zollfrei, Röstkaffee bis 7,5 % Zoll (ohne Handelsabkommen) → geröstet wird im Norden', 'Der <b>Börsenpreis</b> schwankt – das Risiko tragen die Bauern', '<b>Koloniales Erbe</b>: Kaffee trieb vom 16. bis 19. Jh. den Sklavenhandel an'] },
+];

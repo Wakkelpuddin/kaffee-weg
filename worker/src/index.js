@@ -11,6 +11,7 @@ export class Room {
   constructor(state) {
     this.sql = state.storage.sql;
     this.sql.exec('CREATE TABLE IF NOT EXISTS v (k TEXT PRIMARY KEY, n INTEGER)');
+    this.sql.exec('CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS s (id INTEGER PRIMARY KEY AUTOINCREMENT, fair REAL, cup REAL, farmer REAL)');
   }
   state() {
@@ -21,7 +22,8 @@ export class Room {
       if (votes[p] && votes[p][+o] !== undefined) votes[p][+o] = r.n;
     }
     const a = this.sql.exec('SELECT COUNT(*) AS n, AVG(fair) AS fair, AVG(cup) AS cup, AVG(farmer) AS farmer FROM s').one();
-    return { votes, sim: { n: a.n, fair: a.fair || 0, cup: a.cup || 0, farmer: a.farmer || 0 } };
+    const st = this.sql.exec("SELECT v FROM kv WHERE k = 'stage'").toArray()[0];
+    return { stage: st ? JSON.parse(st.v) : null, votes, sim: { n: a.n, fair: a.fair || 0, cup: a.cup || 0, farmer: a.farmer || 0 } };
   }
   async fetch(req) {
     const p = new URL(req.url).pathname;
@@ -35,8 +37,12 @@ export class Room {
       const f = Number(b.fair), c = Number(b.cup), fa = Number(b.farmer);
       if (![f, c, fa].every(Number.isFinite) || f < 0 || f > 100 || c < 0 || c > 1 || fa < 0 || fa > 10) return json({ err: 'bad' }, 400);
       this.sql.exec('INSERT INTO s (fair, cup, farmer) VALUES (?, ?, ?)', f, c, fa);
+    } else if (req.method === 'POST' && p === '/stage') {
+      const b = await req.json().catch(() => ({}));
+      if (typeof b.scene !== 'string' || b.scene.length > 20 || !Number.isInteger(b.sub)) return json({ err: 'bad' }, 400);
+      this.sql.exec("INSERT INTO kv (k, v) VALUES ('stage', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", JSON.stringify({ scene: b.scene, sub: b.sub, t: Date.now() }));
     } else if (req.method === 'POST' && p === '/reset') {
-      this.sql.exec('DELETE FROM v'); this.sql.exec('DELETE FROM s');
+      this.sql.exec('DELETE FROM v'); this.sql.exec('DELETE FROM s'); this.sql.exec('DELETE FROM kv');
     }
     return json(this.state());
   }
@@ -46,8 +52,8 @@ export default {
   async fetch(req, env) {
     if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
     const u = new URL(req.url);
-    if (u.pathname === '/reset' && u.searchParams.get('key') !== env.RESET_KEY) return json({ err: 'forbidden' }, 403);
-    if (!['/state', '/vote', '/sim', '/reset'].includes(u.pathname)) return json({ err: 'not found' }, 404);
+    if (['/reset', '/stage'].includes(u.pathname) && u.searchParams.get('key') !== env.RESET_KEY) return json({ err: 'forbidden' }, 403);
+    if (!['/state', '/vote', '/sim', '/reset', '/stage'].includes(u.pathname)) return json({ err: 'not found' }, 404);
     const stub = env.ROOM.get(env.ROOM.idFromName('klasse'));
     return stub.fetch(req);
   },
