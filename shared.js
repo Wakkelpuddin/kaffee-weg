@@ -18,10 +18,10 @@ const PRICE = [
 ];
 
 const LAND = {
-  br: { n: 'Brasilien', eco: -15, info: 'Größter Produzent (≈ 39 % der Welt). Riesige Plantagen, oft Maschinen-Ernte. Rund 38 Mio. kg Pestizide pro Jahr.' },
-  vn: { n: 'Vietnam', eco: -10, info: 'Nr. 2 der Welt, vor allem Robusta (für Instant- und Espresso-Mischungen). Sehr intensiver Anbau.' },
-  co: { n: 'Kolumbien', eco: 0, info: 'Arabica von Kleinbauern an steilen Hängen – meist per Hand gepflückt.' },
-  et: { n: 'Äthiopien', eco: 12, info: 'Ursprungsland des Kaffees. Viel Wald- und Schattenkaffee von Kleinbauern.' },
+  br: { n: 'Brasilien', eco: -15, raw: 1.0, zoll: 0.075, info: 'Größter Produzent (≈ 39 % der Welt). Riesige Plantagen, oft Maschinen-Ernte → günstiger Rohkaffee. Rund 38 Mio. kg Pestizide pro Jahr. Röstkaffee kostet 7,5 % EU-Zoll.' },
+  vn: { n: 'Vietnam', eco: -10, raw: 0.8, zoll: 0, info: 'Nr. 2 der Welt, vor allem Robusta – billiger als Arabica, steckt in Instant- und Espresso-Mischungen. Intensiver Anbau. Dank EU-Handelsabkommen zollfrei.' },
+  co: { n: 'Kolumbien', eco: 0, raw: 1.25, zoll: 0.075, info: 'Hochwertiger Arabica, meist per Hand gepflückt an steilen Hängen → teurerer Rohkaffee.' },
+  et: { n: 'Äthiopien', eco: 12, raw: 1.3, zoll: 0, info: 'Ursprungsland des Kaffees: Wald- und Schattenkaffee von Kleinbauern, gefragte Spezialitäten. Als eines der ärmsten Länder zollfrei in die EU.' },
 };
 
 const fmt = (x, d = 2) => x.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -30,10 +30,10 @@ const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 
 // Vereinfachtes Modell: Basiswerte aus der Quelle, Aufschläge (Fairtrade, Bio, Zoll-Effekt) geschätzt
 function model(o) {
-  const boom = 1 + o.ernte / 100 * 1.2;                 // Missernte -> Weltmarktpreis steigt
+  const L = LAND[o.land], boom = (1 + o.ernte / 100 * 1.2) * L.raw; // Missernte -> Weltmarktpreis steigt; Land -> Rohkaffeepreis
   const bauer = 0.41 * o.lohn * boom + (o.fair ? 0.30 : 0) + (o.bio ? 0.25 : 0);
   const haendler = 0.26 * boom, exp = 0.29, roest = 0.89;
-  const zoll = o.roastOrigin ? 0.075 * (bauer + haendler + exp + roest) : 0; // EU-Zoll Röstkaffee 7,5 %, Rohkaffee 0 %
+  const zoll = o.roastOrigin ? L.zoll * (bauer + haendler + exp + roest) : 0; // EU-Zoll Röstkaffee 7,5 % ohne Abkommen, Rohkaffee 0 %
   const total = bauer + haendler + exp + roest + zoll + 2.19 + 1.39 + 2.63;
   const origin = bauer + haendler + exp + (o.roastOrigin ? roest : 0);
   const cup = total / 125;                               // ≈ 8 g Kaffee pro Tasse
@@ -83,8 +83,9 @@ function bindSim(root, onChange) {
 }
 function insight(m) {
   const b = model(BASE), d = (m.cup - b.cup) * 100, x = m.bauer / b.bauer;
-  if (Math.abs(d) < 0.05) return 'So ist es heute: Von jeder Tasse kommt fast nichts beim Bauern an.';
-  return `Die Tasse wird nur <b>${fmt(d, 1)} ct</b> teurer – die Bäuerin bekommt aber das <b>${fmt(x, 1)}-fache</b>.`;
+  if (Math.abs(d) < 0.05 && Math.abs(x - 1) < 0.05) return 'So ist es heute: Von jeder Tasse kommt fast nichts bei der Bäuerin an.';
+  const dt = d >= 0.05 ? `nur <b>${fmt(d, 1)} ct teurer</b>` : d <= -0.05 ? `<b>${fmt(-d, 1)} ct billiger</b>` : '<b>praktisch gleich teuer</b>';
+  return `Im Vergleich zu heute (Brasilien) wird die Tasse ${dt} – die Bäuerin bekommt ${x >= 1 ? 'das' : 'nur das'} <b>${fmt(x, 1)}-fache</b>.`;
 }
 function gauge(el, v, label) {
   el.innerHTML = `<div class="g-bar"><i style="width:${v}%"></i></div><div class="g-l"><span>${label}</span><b>${v}</b></div>`;
