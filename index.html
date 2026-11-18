@@ -357,7 +357,11 @@ function enter(s) {
   render(s.id);
 }
 let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => scenes[cur].scrollIntoView(), 150); });
-function go(i) { cur = Math.max(0, Math.min(scenes.length - 1, i)); scenes[cur].scrollIntoView({ behavior: 'smooth' }); }
+function go(i) { cur = Math.max(0, Math.min(scenes.length - 1, i)); scenes[cur].scrollIntoView({ behavior: 'smooth' }); enter(scenes[cur]); }
+let sc; addEventListener('scroll', () => { clearTimeout(sc); sc = setTimeout(() => {
+  let best = 0, bd = 1e9; scenes.forEach((s, i) => { const d = Math.abs(s.getBoundingClientRect().top); if (d < bd) { bd = d; best = i; } });
+  if (best !== cur) { cur = best; enter(scenes[cur]); }
+}, 180); }, { passive: true });
 function step(d) {
   const s = scenes[cur], n = +s.dataset.steps;
   if (d > 0 && sub[s.id] < n - 1) { sub[s.id]++; render(s.id); return; }
