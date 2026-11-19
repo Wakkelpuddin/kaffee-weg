@@ -398,7 +398,7 @@ function enter(s) {
   s.classList.add('in');
   $$('#dots a').forEach((a, i) => a.classList.toggle('on', i === cur));
   $('#prog').style.width = (cur / (scenes.length - 1) * 100) + '%';
-  document.body.classList.toggle('hide-mini', ['start', 'abst', 'ende'].includes(s.id));
+  document.body.classList.toggle('hide-mini', ['start', 'preis', 'abst', 'ende'].includes(s.id));
   if (s.id === 'konsum') countUp();
   render(s.id);
 }
