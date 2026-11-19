@@ -61,6 +61,7 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
 .stage { position: relative; min-height: 60vh; }
 .stage > * { position: absolute; inset: 0; transition: opacity .6s, transform .6s; }
 #cups canvas { width: 100%; height: 100%; }
+@media (max-width: 900px) { #preis .cols { grid-template-columns: 1fr !important; } }
 #cups p { position: absolute; bottom: -2.2em; left: 0; margin: 0; }
 #demand { opacity: 0; transform: scale(.96); pointer-events: none; display: flex; flex-direction: column; justify-content: center; }
 #konsum.s1 #cups { opacity: 0; transform: scale(.96); }
@@ -119,6 +120,26 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
 .kc ul { margin: 0; padding-left: 1.1em; line-height: 1.5; } .kc li { margin-bottom: .55em; }
 .kc .ic { font-size: 2.2em; }
 .balance { margin-top: 3vh; color: var(--mut); }
+
+/* 5 · Preis */
+.pchart { width: 100%; display: block; touch-action: pan-y; }
+.pline { stroke-dasharray: 3000; stroke-dashoffset: 3000; }
+#preis.in .pline { transition: stroke-dashoffset 3.2s cubic-bezier(.4,0,.2,1) .4s; stroke-dashoffset: 0; }
+.parea { opacity: 0; transition: opacity 1.2s 2.6s; } #preis.in .parea { opacity: 1; }
+.pmarks g { animation: pop .6s cubic-bezier(.2,1.6,.4,1) both; transform-box: fill-box; transform-origin: center; }
+@keyframes pop { from { opacity: 0; transform: scale(.4); } }
+.pband rect { animation: fadein .8s both; } @keyframes fadein { from { opacity: 0; } }
+.pstat b#pnum { display: block; font-family: 'Fraunces', serif; font-size: clamp(64px, 7vw, 130px); line-height: 1; color: var(--hot); }
+.pstat span { color: var(--mut); }
+.pev { margin: 1.2em 0; min-height: 9em; }
+.pev h3 { font-size: 1.5em; margin: .15em 0 .35em; } .pev p { margin: 0; line-height: 1.5; }
+.pev .when { color: var(--hot); font-weight: 700; font-size: .85em; letter-spacing: .08em; text-transform: uppercase; }
+.why4 { display: grid; grid-template-columns: 1fr 1fr; gap: .5em; margin-top: .6em; font-size: .9em; }
+.why4 div { background: var(--bg3); border-radius: 10px; padding: .5em .7em; line-height: 1.35; }
+.beans { display: flex; flex-wrap: wrap; gap: 8px; font-size: 22px; margin-bottom: .5em; }
+.beans .bean { transition: transform 1s cubic-bezier(.5,0,.75,0), opacity 1s; }
+.beans .bean.gone { transform: translateY(120px) rotate(160deg); opacity: 0; }
+.beans .bean.half { clip-path: inset(0 50% 0 0); }
 
 /* 5 · Handeln */
 .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2em; margin-top: 4vh; }
@@ -276,19 +297,37 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
   </div>
 </section>
 
+<!-- 5 · PREIS -->
+<section class="scene" id="preis" data-title="Kaffeepreis" data-steps="4">
+  <div>
+    <div class="kicker reveal">5 · Der Kaffeepreis explodiert</div>
+    <h2 class="reveal d1" style="margin:.2em 0 3vh">Kaffee war noch nie so teuer</h2>
+    <div class="cols" style="grid-template-columns:1.35fr 1fr;gap:3.5vw">
+      <div class="card reveal d1" style="padding:1em">
+        <div class="mut sm" style="margin:0 0 .4em .4em">Börsenpreis Rohkaffee (Arabica) in US-Dollar pro Pfund · Finger oder Maus auf die Kurve</div>
+        <div id="pchart"></div>
+        <div class="mut sm" style="margin:.3em 0 0 .4em">Werte vereinfacht nach finanzen.net / bodan.de</div>
+      </div>
+      <div class="reveal d2">
+        <div class="pstat"><b id="pnum">+0 %</b><span>von <b>1,25 $</b> (Jan 2020) auf <b>4,40 $</b> (Anfang 2025)</span></div>
+        <div class="card pev" id="pev"></div>
+        <div class="beans" id="beans"></div>
+        <div class="mut sm" id="beansl">Für 10 $ gab es an der Börse 2020 rund <b>8 Pfund</b> Rohkaffee …</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- 5 · HANDELN -->
 <section class="scene" id="handeln" data-title="Was tun?" data-steps="1">
   <div>
-    <div class="kicker reveal">5 · Was können wir tun?</div>
+    <div class="kicker reveal">6 · Was können wir tun?</div>
     <h2 class="reveal d1" style="margin-top:.2em">Kleine Entscheidungen, große Kette</h2>
     <div class="tiles">
       <div class="card reveal d1"><h3>🏷️ Siegel beachten</h3><p><b>Fairtrade</b>: Mindestpreis + Prämie für die Gemeinschaft. <b>Bio</b>: keine chemisch-synthetischen Pestizide. <b>Rainforest Alliance</b>: Umwelt- und Sozialstandards.</p><p class="mut sm" style="margin-top:.6em">Aber: Siegel garantieren keinen existenzsichernden Lohn – und die Zertifizierung kostet die Bauern selbst Geld.</p></div>
       <div class="card reveal d2"><h3>🔥 Im Anbauland geröstet</h3><p>Direkthandel oder Kaffee, der im Ursprungsland geröstet wird: So bleibt <b>mehr Wertschöpfung vor Ort</b>.</p></div>
       <div class="card reveal d3"><h3>🥛 Milch bewusst wählen</h3><p>Latte macchiato, CO₂ pro Glas:</p>
         <div class="cmp"><div><i style="width:170px"></i>Kuhmilch 0,85 kg</div><div class="h"><i style="width:94px"></i>Hafermilch 0,47 kg</div></div></div>
-      <div class="card reveal d1"><h3>🗑️ Nichts wegwerfen</h3><p>Verluste entlang der Kette verursachen <b>≈ 11,5 kg CO₂ pro kg</b> Kaffee – fast so viel wie der ganze Anbau (10,75 kg).</p></div>
-      <div class="card reveal d2"><h3>☕ Weniger, aber besser</h3><p>Lieber bewusst genießen und etwas mehr für faire Qualität zahlen.</p></div>
-      <div class="card reveal d3"><h3>🗳️ Politik</h3><p>Lieferkettengesetze und das EU-Gesetz gegen Entwaldung sollen Firmen verpflichten, auf Menschenrechte und Wald zu achten.</p></div>
     </div>
   </div>
 </section>
@@ -297,7 +336,7 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
 <section class="scene" id="abst" data-title="Abstimmung" data-steps="1">
   <div class="cols">
     <div>
-      <div class="kicker reveal">6 · Eure Meinung</div>
+      <div class="kicker reveal">7 · Eure Meinung</div>
       <h2 class="reveal d1" style="margin:.2em 0 .5em">Würdet ihr mehr zahlen?</h2>
       <div class="card poll reveal d2"><h3 style="font-size:1.25em;margin-bottom:.4em">Wie viel mehr würdest du pro Tasse für wirklich fairen Kaffee zahlen?</h3><div id="poll2"></div></div>
       <div class="klasse reveal d3" id="klasse2"></div>
@@ -387,6 +426,7 @@ function render(id) {
   if (id === 'konsum') $('#konsum').classList.toggle('s1', k >= 1);
   if (id === 'kette') chain(k);
   if (id === 'kritik') $$('.kc').forEach((c, i) => c.classList.toggle('on', i <= k));
+  if (id === 'preis') preis(k);
   sendStage();
 }
 
@@ -471,6 +511,30 @@ function chain(k) {
       <div class="row"><div class="o"><b>${fmt(PRICE[0].v / TOTAL * 100, 0)} %</b>Bäuerin</div><div class="o"><b>${fmt(o / TOTAL * 100, 0)} %</b>im Anbauland</div><div class="n"><b>${fmt((1 - o / TOTAL) * 100, 0)} %</b>in Deutschland</div></div>
       <p>Allein die Kaffeesteuer ist <b>über 5-mal so hoch</b> wie das, was die Bäuerin bekommt.</p>${guess}</div>`;
   }
+}
+
+// 5 · Kaffeepreis
+const PC = priceSVG(); $('#pchart').innerHTML = PC.svg; bindTip($('#pchart svg'), PC);
+$('#beans').innerHTML = '<span class="bean"></span>'.repeat(16);
+let pCounted = false;
+const PEV = [
+  { w: '2020 – Anfang 2025', h: 'Mehr als verdreifacht', x: 'So hat sich der Preis für Rohkaffee an der Börse entwickelt. Anfang 2025 kostete ein Pfund erstmals über 4 $ – <b>so teuer wie nie</b>.' },
+  { w: 'Juli 2021', h: 'Frost in Brasilien', x: 'Frost zerstört Kaffeepflanzen im größten Anbauland. Weniger Angebot → der Preis springt nach oben (genau wie in unserem Diagramm vorhin).', m: 18 },
+  { w: 'Herbst 2023 – Anfang 2025', h: 'Die große Preisrallye', x: '<b>Brasilien:</b> 2024 war das trockenste Jahr seit 1981 – die Blüte leidet. <b>Vietnam:</b> erst Dürre, dann Überschwemmungen. Gleichzeitig wollen <b>China und Indien</b> immer mehr Kaffee. Von Jan 2024 bis Jan 2025 hat sich der Preis <b>verdoppelt</b>.', m: 60, band: [45, 60] },
+  { w: 'Warum so teuer?', h: 'Vier Gründe', x: '<div class="why4"><div>🌡️ <b>Klimawandel</b> – Hitze, Dürre, Starkregen (Hauptgrund)</div><div>📈 <b>Nachfrage</b> aus China und Indien steigt</div><div>🚢 <b>Fracht</b> – Umwege ums Rote Meer</div><div>💹 <b>Spekulation</b> &amp; Vorräte – Angst vor US-Zöllen und EU-Entwaldungsgesetz</div></div>' },
+];
+function preis(k) {
+  if (!pCounted) { pCounted = true; const t0 = performance.now(); (function f(t) { const p = Math.min(1, (t - t0) / 3600), e = 1 - Math.pow(1 - p, 3); $('#pnum').textContent = '+' + Math.round(252 * e) + ' %'; if (p < 1) requestAnimationFrame(f); })(t0); }
+  const e = PEV[k];
+  $('#pev').innerHTML = `<div class="when">${e.w}</div><h3>${e.h}</h3><div>${e.x}</div>`;
+  $('#pchart .pmarks').innerHTML = PEV.slice(1, k + 1).filter(v => v.m !== undefined).map(v => {
+    const X = PC.X(v.m), Y = PC.Y(KPREIS[v.m]), right = v.m > 40;
+    return `<g><circle cx="${X}" cy="${Y}" r="11" fill="#170d08" stroke="#f6ead8" stroke-width="4"/><text x="${right ? X - 16 : X}" y="${Y - 20}" text-anchor="${right ? 'end' : 'middle'}" fill="#f6ead8" font-size="17" font-weight="700">${v.h} · ${fmt(KPREIS[v.m])} $</text></g>`;
+  }).join('');
+  const b = PEV.slice(1, k + 1).find(v => v.band);
+  $('#pchart .pband').innerHTML = b ? `<rect x="${PC.X(b.band[0])}" y="20" width="${PC.X(b.band[1]) - PC.X(b.band[0])}" height="${PC.h - 60}" fill="#ef7d4518"/>` : '';
+  $$('#beans .bean').forEach((x, i) => { x.classList.toggle('gone', k >= 3 && i > 4); x.classList.toggle('half', k >= 3 && i === 4); });
+  $('#beansl').innerHTML = k >= 3 ? 'Für 10 $ gab es 2020 rund <b>8 Pfund</b> Rohkaffee – Anfang 2025 nur noch <b>2,3 Pfund</b>. Für die Bauern lohnt sich das nur, wenn sie trotz Dürre überhaupt ernten können.' : 'Für 10 $ gab es an der Börse 2020 rund <b>8 Pfund</b> Rohkaffee (jede Bohne = ½ Pfund) …';
 }
 
 // 3 · Simulator

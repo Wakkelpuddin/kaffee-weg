@@ -58,6 +58,7 @@ section p { line-height: 1.5; }
 .dots { display: flex; gap: 5px; margin-bottom: 8px; } .dots i { flex: 1; height: 4px; border-radius: 2px; background: var(--bg3); } .dots i.on { background: var(--crema); }
 .kc { background: var(--bg3); border-radius: 14px; padding: 14px 16px; margin: 10px 0; animation: inn .5s; }
 .kc h3 { font-size: 20px; margin-bottom: 6px; } .kc ul { margin: 0; padding-left: 18px; line-height: 1.5; } .kc li { margin-bottom: 6px; }
+.pchart { width: 100%; display: block; touch-action: pan-y; }
 .tips li { margin-bottom: 8px; line-height: 1.45; }
 .row3 { display: flex; gap: 10px; margin: 10px 0; } .row3 div { flex: 1; background: var(--bg3); border-radius: 12px; padding: 10px; text-align: center; }
 .row3 b { display: block; font-family: 'Fraunces', serif; font-size: 26px; } .row3 .o b { color: var(--origin); } .row3 .n b { color: var(--north); }
@@ -110,20 +111,30 @@ section p { line-height: 1.5; }
 <!-- KRITIK -->
 <section data-scene="kritik"><div class="kicker">4 · Kritik</div><h2>Der wahre Preis einer Tasse</h2><div id="krit"></div></section>
 
+<!-- PREIS -->
+<section data-scene="preis"><div class="kicker">5 · Kaffeepreis</div><h2>Kaffee war noch nie so teuer</h2>
+  <p style="font-weight:600;margin-bottom:8px">Schätz mal: Um wie viel ist der Börsenpreis von 2020 bis Anfang 2025 gestiegen?</p>
+  <div class="pills" id="pguess"><button data-a="0">+30 %</button><button data-a="0">+100 %</button><button data-a="1">+250 %</button><button data-a="0">+600 %</button></div>
+  <div id="presult" style="display:none">
+    <div id="mchart" style="margin:12px -6px 4px"></div>
+    <p class="mut sm" style="margin-top:0">Rohkaffee (Arabica), US$ pro Pfund – tippe auf die Kurve.</p>
+    <ul class="tips"><li>🌡️ <b>Klimawandel</b>: 2024 trockenstes Jahr in Brasilien seit 1981, in Vietnam Dürre und dann Überschwemmungen</li><li>📈 <b>Nachfrage</b> aus China und Indien steigt</li><li>🚢 <b>Fracht</b>: Umwege ums Rote Meer</li><li>💹 <b>Spekulation</b> und Vorräte (Angst vor US-Zöllen und EU-Entwaldungsgesetz)</li></ul>
+  </div>
+</section>
+
 <!-- HANDELN -->
-<section data-scene="handeln"><div class="kicker">5 · Was tun?</div><h2>Deine Tasse, deine Wahl</h2>
+<section data-scene="handeln"><div class="kicker">6 · Was tun?</div><h2>Deine Tasse, deine Wahl</h2>
   <p style="font-weight:600;margin-bottom:8px">Was trinkst du am liebsten?</p>
   <div class="pills" id="cupsel"></div><p id="cupout"></p>
   <ul class="tips">
     <li><b>Siegel</b>: Fairtrade (Mindestpreis + Prämie), Bio, Rainforest Alliance – aber kein garantierter existenzsichernder Lohn.</li>
     <li>Kaffee, der <b>im Anbauland geröstet</b> wird, oder Direkthandel.</li>
-    <li><b>Hafermilch</b> statt Kuhmilch, <b>nichts wegwerfen</b>.</li>
-    <li>Weniger, aber bewusster genießen.</li>
+    <li><b>Hafermilch</b> statt Kuhmilch.</li>
   </ul>
 </section>
 
 <!-- ABSTIMMUNG -->
-<section data-scene="abst"><div class="kicker">6 · Abstimmung</div><h2 id="p2q"></h2><div class="vote" data-poll="p2"></div></section>
+<section data-scene="abst"><div class="kicker">7 · Abstimmung</div><h2 id="p2q"></h2><div class="vote" data-poll="p2"></div></section>
 
 <!-- ENDE -->
 <section data-scene="ende"><div class="kicker">Geschafft!</div><h2>Lernzettel</h2>
@@ -263,6 +274,13 @@ $('#cupsel').onclick = e => {
   $('#cupout').innerHTML = `<b>${fmt(c.co2)} kg CO₂</b> pro Tasse${c.w ? ` · Wasser: <b>${c.w}</b>` : ''}.<br>Bei ${cn} Tasse${cn === 1 ? '' : 'n'} am Tag sind das <b>${fmt(yr, 0)} kg CO₂</b> im Jahr.`;
 };
 
+// ---------- Kaffeepreis ----------
+$('#pguess').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $$('#pguess button').forEach(x => x.classList.remove('ok', 'no')); b.classList.add(b.dataset.a === '1' ? 'ok' : 'no'); $$('#pguess button')[2].classList.add('ok');
+  if ($('#presult').style.display === 'none') { $('#presult').style.display = ''; const P = priceSVG(800, 460); $('#mchart').innerHTML = P.svg; bindTip($('#mchart svg'), P); }
+};
+
 // ---------- Quiz ----------
 const QUIZ = [
   ['Wie viel bekommt die Bäuerin von 8,06 € pro kg Kaffee?', ['41 Cent', '1,39 €', '2,19 €', '4,00 €'], 0, 'Nur etwa 5 % des Ladenpreises.'],
@@ -270,6 +288,7 @@ const QUIZ = [
   ['Was ist eine Wertschöpfungskette?', ['Eine Kette von Supermärkten', 'Alle Stufen vom Rohstoff bis zum Endprodukt, auf denen Wert dazukommt', 'Ein Siegel für fairen Handel', 'Die Route eines Schiffs'], 1, 'Anbau → Aufbereitung → Export → Rösten → Handel → Tasse.'],
   ['Warum wird Kaffee meist in Deutschland geröstet?', ['Hier ist es wärmer', 'Röstkaffee kostet oft EU-Zoll, Rohkaffee nie', 'Weil es so vorgeschrieben ist', 'Die Bohnen verderben sonst'], 1, 'Zolleskalation: Verarbeitete Ware wird höher verzollt.'],
   ['Wie viel Wasser steckt in einer Tasse schwarzem Kaffee?', ['2 Liter', '25 Liter', '280 Liter', '2.000 Liter'], 2, 'Fast alles davon beim Anbau.'],
+  ['Was ist der Hauptgrund für den Rekord-Kaffeepreis 2024/25?', ['Neue Steuern in Deutschland', 'Dürren und Unwetter durch den Klimawandel', 'Zu viele Kaffeebauern', 'Teurere Kaffeemaschinen'], 1, 'Vor allem Dürre in Brasilien und Wetterextreme in Vietnam.'],
   ['Welches Land produziert den meisten Kaffee?', ['Kolumbien', 'Äthiopien', 'Vietnam', 'Brasilien'], 3, 'Brasilien: rund 39 % der Weltproduktion.'],
 ];
 let pts = 0, answered = 0;

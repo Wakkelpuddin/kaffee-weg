@@ -112,6 +112,40 @@ const KRITIK = [
 const SCENES = [
   { id: 'start', t: 'Start · Schätzfrage', n: 1 }, { id: 'konsum', t: 'Konsum & Nachfrage', n: 2 },
   { id: 'kette', t: 'Wertschöpfungskette', n: 8 }, { id: 'sim', t: 'Simulator', n: 1 },
-  { id: 'kritik', t: 'Kritik', n: 3 }, { id: 'handeln', t: 'Was tun?', n: 1 },
+  { id: 'kritik', t: 'Kritik', n: 3 }, { id: 'preis', t: 'Kaffeepreis', n: 4 }, { id: 'handeln', t: 'Was tun?', n: 1 },
   { id: 'abst', t: 'Abstimmung', n: 1 }, { id: 'ende', t: 'Fazit & Lernzettel', n: 1 },
 ];
+
+// Börsenpreis Rohkaffee (Arabica), US$ pro Pfund, Monatswerte Jan 2020 – Jan 2025 (vereinfacht nach finanzen.net / bodan.de)
+const KPREIS = [1.25,1.05,1.15,1.20,1.05,0.97,1.00,1.25,1.30,1.10,1.10,1.22, 1.25,1.22,1.30,1.25,1.50,1.55,2.05,1.85,1.95,2.05,2.30,2.35,
+  2.45,2.55,2.20,2.25,2.20,2.30,2.20,2.35,2.25,1.95,1.65,1.65, 1.60,1.80,1.85,1.85,1.95,1.85,1.60,1.55,1.55,1.65,1.80,2.00,
+  1.90,1.90,1.90,2.30,2.10,2.30,2.35,2.45,2.65,2.45,2.90,3.25, 4.40];
+const MON = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+const kpDate = i => MON[i % 12] + ' ' + (2020 + Math.floor(i / 12));
+function priceSVG(w = 800, h = 420) {
+  const N = KPREIS.length - 1, X = i => 60 + i * (w - 90) / N, Y = v => h - 40 - v * (h - 70) / 5;
+  let g = '';
+  for (let v = 0; v <= 5; v++) g += `<line x1="60" x2="${w - 30}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ffffff14"/><text x="48" y="${Y(v) + 5}" text-anchor="end" fill="#b59a80" font-size="14">${v} $</text>`;
+  for (let i = 0; i <= N; i += 12) g += `<text x="${X(i)}" y="${h - 12}" text-anchor="middle" fill="#b59a80" font-size="14">${2020 + i / 12}</text>`;
+  const pts = KPREIS.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`);
+  const svg = `<svg viewBox="0 0 ${w} ${h}" class="pchart"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef7d45" stop-opacity=".35"/><stop offset="1" stop-color="#ef7d45" stop-opacity="0"/></linearGradient></defs>${g}
+    <g class="pband"></g><path class="parea" d="M${X(0)},${Y(0)} L${pts.join(' L')} L${X(N)},${Y(0)} Z" fill="url(#pg)"/>
+    <path class="pline" d="M${pts.join(' L')}" fill="none" stroke="#ef7d45" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+    <g class="pmarks"></g><g class="ptip" style="display:none"><line y1="20" y2="${h - 40}" stroke="#f6ead855" stroke-dasharray="4 4"/><circle r="7" fill="#f6ead8"/><rect rx="8" height="30" fill="#33200f" stroke="#4a3020"/><text font-size="15" font-weight="700" fill="#f6ead8"></text></g></svg>`;
+  return { svg, X, Y, N, w, h };
+}
+function bindTip(svgEl, P) {
+  const tip = svgEl.querySelector('.ptip');
+  const mv = e => {
+    const r = svgEl.getBoundingClientRect(), x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    const i = Math.max(0, Math.min(P.N, Math.round(((x * P.w / r.width) - 60) / (P.w - 90) * P.N)));
+    const X = P.X(i), Yv = P.Y(KPREIS[i]), txt = kpDate(i) + ': ' + fmt(KPREIS[i]) + ' $';
+    tip.style.display = ''; tip.querySelector('line').setAttribute('x1', X); tip.querySelector('line').setAttribute('x2', X);
+    tip.querySelector('circle').setAttribute('cx', X); tip.querySelector('circle').setAttribute('cy', Yv);
+    const bw = txt.length * 8.4 + 16, bx = Math.min(P.w - 30 - bw, Math.max(62, X - bw / 2));
+    tip.querySelector('rect').setAttribute('x', bx); tip.querySelector('rect').setAttribute('y', Math.max(4, Yv - 48)); tip.querySelector('rect').setAttribute('width', bw);
+    tip.querySelector('text').setAttribute('x', bx + 8); tip.querySelector('text').setAttribute('y', Math.max(4, Yv - 48) + 20); tip.querySelector('text').textContent = txt;
+  };
+  svgEl.addEventListener('pointermove', mv); svgEl.addEventListener('touchmove', mv, { passive: true });
+  svgEl.addEventListener('pointerleave', () => tip.style.display = 'none');
+}
