@@ -197,8 +197,9 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
           <text id="dlt" fill="#e3b77d" font-size="15" font-weight="700">Nachfrage</text><text id="slt" fill="#7fcf7a" font-size="15" font-weight="700">Angebot</text>
           <text id="ptx" x="56" fill="#ef7d45" font-size="16" font-weight="700"></text>
         </svg>
-        <label class="ctl"><span class="lab">Nachfrage steigt (mehr Kaffeetrinker weltweit)</span><input type="range" id="dsl" min="0" max="3" step="0.1" value="0"></label>
-        <label class="ctl"><span class="lab">Missernte (Frost, Dürre, Pflanzenkrankheiten)</span><input type="range" id="ssl" min="0" max="3" step="0.1" value="0"></label>
+        <label class="ctl"><span class="lab">Nachfrage steigt (mehr Kaffeetrinker weltweit) <b class="val" id="dslv">± 0 %</b></span><input type="range" id="dsl" min="0" max="3" step="0.25" value="0"></label>
+        <label class="ctl"><span class="lab">Missernte (Frost, Dürre, Pflanzenkrankheiten) <b class="val" id="sslv">± 0 %</b></span><input type="range" id="ssl" min="0" max="3" step="0.25" value="0"></label>
+        <div id="dres" style="display:flex;gap:1.6em;margin:2px 0 8px;font-size:1.05em"></div>
         <p class="mut sm" style="margin:0">→ Der Preis schwankt ständig. Für Bauern heißt das: <b>unsicheres Einkommen</b>.</p>
       </div>
     </div>
@@ -421,9 +422,12 @@ function demand() {
   const dq = Math.max(0, d - 1), se = Math.min(10, 11 - s);
   line($('#dl'), dq, 10 + d - dq, 10, d); line($('#sl'), 0, s, se, se + s);
   const Q = (10 + d - s) / 2, P = (10 + d + s) / 2;
+  const pc = v => (v > 0 ? '+' : v < 0 ? '−' : '± ') + Math.abs(Math.round(v)) + ' %';
+  $('#dslv').textContent = pc(d / 5 * 100); $('#sslv').textContent = s ? '−' + Math.round(s / 5 * 100) + ' % Ernte' : '± 0 %';
+  $('#dres').innerHTML = `<span>Preis: <b style="color:var(--hot)">${pc((P / 5 - 1) * 100)}</b></span><span>verkaufte Menge: <b>${pc((Q / 5 - 1) * 100)}</b></span>`;
   const pl = $('#pl'); pl.setAttribute('x1', 50); pl.setAttribute('x2', X(Q)); pl.setAttribute('y1', Y(P)); pl.setAttribute('y2', Y(P));
   $('#pp').setAttribute('cx', X(Q)); $('#pp').setAttribute('cy', Y(P));
-  $('#ptx').setAttribute('y', Y(P) - 10); $('#ptx').textContent = 'Weltmarktpreis ' + (P > 5.05 ? '↑ +' + Math.round((P / 5 - 1) * 100) + ' %' : '');
+  $('#ptx').setAttribute('y', Y(P) - 10); $('#ptx').textContent = 'Weltmarktpreis';
   $('#dlt').setAttribute('x', X(10) - 70); $('#dlt').setAttribute('y', Y(d) - 10);
   $('#slt').setAttribute('x', X(se) - 30); $('#slt').setAttribute('y', Y(se + s) + 22);
 }
