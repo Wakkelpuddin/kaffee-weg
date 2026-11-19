@@ -138,7 +138,7 @@ section p { line-height: 1.5; }
 <script src="shared.js"></script>
 <script>
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }, del: k => { try { localStorage.removeItem(k); } catch {} } };
 const TOTAL = PRICE.reduce((a, p) => a + p.v, 0);
 
 // ---------- Synchronisation mit der Tafel ----------
@@ -161,6 +161,11 @@ $('#free').onclick = e => { if (e.target.id === 'fb') { freeMode = false; show()
 async function poll() {
   try {
     const s = await api('/state'); fails = 0;
+    if (s.round !== undefined && ls.get('kw-round') !== s.round) {
+      ['kw-p1', 'kw-p2', 'kw-sim'].forEach(ls.del); ls.set('kw-round', s.round);
+      $$('.vote').forEach(renderVote);
+      $('#send').disabled = false; $('#send').textContent = 'An die Tafel schicken';
+    }
     const fresh = s.stage && Date.now() - s.stage.t < 3 * 3600e3;
     const ns = fresh ? s.stage : { scene: 'start', sub: 0 };
     $('#live').className = 'live'; $('#live').textContent = fresh ? 'LIVE' : 'gleich geht’s los';
@@ -173,9 +178,12 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) poll
 
 // ---------- Abstimmungen ----------
 $('#p1q').textContent = POLLS.p1.q; $('#p2q').textContent = POLLS.p2.q;
-$$('.vote').forEach(box => {
+function renderVote(box) {
   const key = box.dataset.poll, mine = ls.get('kw-' + key);
   box.innerHTML = POLLS[key].o.map((t, i) => `<button data-i="${i}"${mine == i ? ' class="me"' : ''}>${t}</button>`).join('') + `<div class="done">${mine !== null ? 'Abgestimmt ✔ – schau an die Tafel!' : ''}</div>`;
+}
+$$('.vote').forEach(box => {
+  const key = box.dataset.poll; renderVote(box);
   box.addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b || ls.get('kw-' + key) !== null) return;
     $$('button', box).forEach(x => x.disabled = true);

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#170d08">
+<meta name="robots" content="noindex">
+<title>Fernbedienung · Der Weg bis zur Tasse</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; padding: 16px; gap: 14px; max-width: 900px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
+.top { display: flex; justify-content: space-between; align-items: center; }
+.st { font-size: 13px; font-weight: 700; color: var(--mut); } .st.ok { color: var(--fair); }
+.now { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; }
+.now h1 { font-size: clamp(26px, 5vw, 42px); margin: 4px 0; }
+.bar { display: flex; gap: 5px; margin-top: 12px; } .bar i { flex: 1; height: 8px; border-radius: 4px; background: var(--bg3); } .bar i.on { background: var(--crema); }
+.btns { flex: 1; display: grid; grid-template-columns: 1fr 2fr; gap: 14px; min-height: 200px; }
+.btns button { border: 0; border-radius: 24px; font-size: clamp(28px, 6vw, 48px); font-weight: 700; -webkit-tap-highlight-color: transparent; transition: transform .1s; }
+.btns button:active { transform: scale(.97); }
+#prev { background: var(--bg3); color: var(--cream); } #next { background: var(--crema); color: var(--bg); }
+.list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.list button { background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; text-align: left; font-size: 14px; font-weight: 600; }
+.list button.on { border-color: var(--crema); color: var(--crema); }
+.foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.foot button { background: none; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; color: var(--mut); }
+#login { display: none; } #login input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); color: var(--cream); font-size: 17px; margin: 10px 0; }
+</style>
+</head>
+<body>
+<div id="login" class="now"><h1>Fernbedienung</h1><p class="mut">Admin-Schlüssel eingeben:</p><input id="k" autocomplete="off"><button class="btn" id="kgo" style="width:100%;padding:14px;border-radius:12px;border:0;background:var(--crema);color:var(--bg);font-weight:700;font-size:17px">Verbinden</button></div>
+<div id="app" style="display:contents">
+  <div class="top"><span class="kicker">Fernbedienung</span><span class="st" id="st">verbinde …</span></div>
+  <div class="now"><div class="mut sm" id="pos"></div><h1 id="title">…</h1><div class="bar" id="bar"></div></div>
+  <div class="btns"><button id="prev">‹ Zurück</button><button id="next">Weiter ›</button></div>
+  <div class="list" id="list"></div>
+  <div class="foot"><span class="mut sm">Die Tafel-Seite muss mit ?admin=… geöffnet sein.</span><button id="reset">Abstimmungen zurücksetzen</button></div>
+</div>
+<script src="shared.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+let key = new URLSearchParams(location.search).get('admin') || ls.get('kw-admin');
+let cur = { scene: 'start', sub: 0 }, busyUntil = 0;
+if (!key) { $('#login').style.display = 'block'; $('#app').style.display = 'none'; }
+$('#kgo').onclick = () => { key = $('#k').value.trim(); if (key) { ls.set('kw-admin', key); location.search = '?admin=' + encodeURIComponent(key); } };
+if (key) ls.set('kw-admin', key);
+
+$('#list').innerHTML = SCENES.map((s, i) => `<button data-i="${i}">${i + 1}. ${s.t}</button>`).join('');
+function draw() {
+  const i = SCENES.findIndex(s => s.id === cur.scene), s = SCENES[i] || SCENES[0];
+  $('#title').textContent = s.t;
+  $('#pos').textContent = `Szene ${i + 1} von ${SCENES.length}` + (s.n > 1 ? ` · Schritt ${cur.sub + 1} von ${s.n}` : '');
+  $('#bar').innerHTML = s.n > 1 ? Array.from({ length: s.n }, (_, k) => `<i class="${k <= cur.sub ? 'on' : ''}"></i>`).join('') : '';
+  document.querySelectorAll('#list button').forEach((b, k) => b.classList.toggle('on', k === i));
+}
+async function send(scene, sub) {
+  cur = { scene, sub }; draw(); busyUntil = Date.now() + 1500;
+  try {
+    const r = await fetch(API + '/stage?key=' + encodeURIComponent(key), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scene, sub, src: 'remote' }) });
+    if (r.status === 403) { $('#st').textContent = 'Schlüssel falsch'; $('#st').className = 'st'; ls.set('kw-admin', ''); return; }
+    $('#st').textContent = 'verbunden ✔'; $('#st').className = 'st ok';
+    if (navigator.vibrate) navigator.vibrate(15);
+  } catch { $('#st').textContent = 'offline'; $('#st').className = 'st'; }
+}
+function move(d) {
+  const i = Math.max(0, SCENES.findIndex(s => s.id === cur.scene)), n = SCENES[i].n;
+  if (d > 0) { if (cur.sub < n - 1) send(cur.scene, cur.sub + 1); else if (i < SCENES.length - 1) send(SCENES[i + 1].id, 0); }
+  else { if (cur.sub > 0) send(cur.scene, cur.sub - 1); else if (i > 0) send(SCENES[i - 1].id, SCENES[i - 1].n - 1); }
+}
+$('#next').onclick = () => move(1); $('#prev').onclick = () => move(-1);
+$('#list').onclick = e => { const b = e.target.closest('button'); if (b) send(SCENES[+b.dataset.i].id, 0); };
+$('#reset').onclick = async () => { if (confirm('Alle Stimmen löschen und auf Start setzen?')) { await fetch(API + '/reset?key=' + encodeURIComponent(key), { method: 'POST' }); send('start', 0); } };
+addEventListener('keydown', e => { if (['ArrowRight', 'PageDown', ' '].includes(e.key)) move(1); if (['ArrowLeft', 'PageUp'].includes(e.key)) move(-1); });
+
+// Stand der Tafel übernehmen (z. B. wenn dort per Tastatur weitergeklickt wurde)
+async function poll() {
+  if (!key || Date.now() < busyUntil) return;
+  try {
+    const s = await api('/state');
+    if (s.stage && Date.now() >= busyUntil) { cur = { scene: s.stage.scene, sub: s.stage.sub }; draw(); }
+    if ($('#st').textContent === 'verbinde …' || $('#st').textContent === 'offline') { $('#st').textContent = 'verbunden ✔'; $('#st').className = 'st ok'; }
+  } catch { $('#st').textContent = 'offline'; $('#st').className = 'st'; }
+}
+draw(); poll(); setInterval(poll, 1000);
+</script>
+</body>
+</html>

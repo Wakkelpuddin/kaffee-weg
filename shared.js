@@ -107,3 +107,11 @@ const KRITIK = [
   { ic: '🧑‍🌾', h: 'Menschen', li: ['Mind. <b>5,5 Mio. Kaffeebauern</b> leben unter der Armutsgrenze (3,20 $ am Tag)', '<b>Kinder- und Zwangsarbeit</b>: laut ILO einer der Sektoren mit den meisten Kinderarbeitenden', 'Pestizide machen krank: Atemwege, Haut, Herz, Krebs', '<b>Landraub</b>: 2001 wurden in Uganda ca. 4.000 Menschen für eine Plantage vertrieben'] },
   { ic: '⚖️', h: 'System', li: ['<b>Nord-Süd-Gefälle</b>: ≈ 88 % des Ladenpreises bleiben in Deutschland', '<b>Zolleskalation</b>: Rohkaffee zollfrei, Röstkaffee bis 7,5 % Zoll (ohne Handelsabkommen) → geröstet wird im Norden', 'Der <b>Börsenpreis</b> schwankt – das Risiko tragen die Bauern', '<b>Koloniales Erbe</b>: Kaffee trieb vom 16. bis 19. Jh. den Sklavenhandel an'] },
 ];
+
+// Szenen der Tafel (für die Fernbedienung)
+const SCENES = [
+  { id: 'start', t: 'Start · Schätzfrage', n: 1 }, { id: 'konsum', t: 'Konsum & Nachfrage', n: 2 },
+  { id: 'kette', t: 'Wertschöpfungskette', n: 8 }, { id: 'sim', t: 'Simulator', n: 1 },
+  { id: 'kritik', t: 'Kritik', n: 3 }, { id: 'handeln', t: 'Was tun?', n: 1 },
+  { id: 'abst', t: 'Abstimmung', n: 1 }, { id: 'ende', t: 'Fazit & Lernzettel', n: 1 },
+];

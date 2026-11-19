@@ -31,6 +31,10 @@ h2 { font-size: clamp(32px, 4vw, 76px); line-height: 1; }
 #miniqr { position: fixed; right: 50px; bottom: 18px; z-index: 9; background: #fff; border-radius: 12px; padding: 7px 7px 4px; text-align: center; color: #170d08; font-size: 11px; font-weight: 700; transition: opacity .4s; }
 #miniqr img { width: 92px; height: 92px; display: block; }
 body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
+#tnav { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 10; display: none; gap: 14px; }
+#tnav button { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); background: #24150dd9; color: var(--cream); font-size: 38px; line-height: 1; padding: 0 0 6px; backdrop-filter: blur(6px); -webkit-tap-highlight-color: transparent; }
+#tnav button:active { background: var(--crema); color: var(--bg); }
+@media (pointer: coarse) { #tnav { display: flex; } #hint { display: none; } }
 #hint { position: fixed; left: 20px; bottom: 16px; font-size: 13px; color: var(--mut); z-index: 9; }
 #admin { position: fixed; left: 20px; bottom: 44px; z-index: 9; display: none; }
 #admin button { background: var(--bg3); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
@@ -137,6 +141,7 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
 <div id="prog"></div>
 <nav id="dots"></nav>
 <div id="miniqr"><img src="qr-mitmachen.svg" alt="QR-Code zum Mitmachen">mitmachen</div>
+<div id="tnav"><button id="tprev" aria-label="zurück">‹</button><button id="tnext" aria-label="weiter">›</button></div>
 <div id="hint">→ / Leertaste: weiter · ← zurück</div>
 <div id="admin"><button id="reset">Abstimmungen zurücksetzen</button> <span id="sync" class="mut sm">📱 Handys folgen</span></div>
 
@@ -170,8 +175,9 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
   <div class="cols">
     <div>
       <div class="kicker reveal">1 · Konsum &amp; Nachfrage</div>
+      <p class="lead reveal d1" style="margin:.6em 0 0">So viel Kaffee trinkt jede Person in Deutschland im Jahr:</p>
       <div class="big reveal d1"><span data-count="169">0</span> Liter</div>
-      <p class="lead reveal d2">Kaffee trinkt jede*r in Deutschland pro Jahr – im Schnitt <b>rund 4 Tassen am Tag</b>.</p>
+      <p class="lead reveal d2">Das sind im Schnitt <b>4 Tassen – jeden Tag</b>.</p>
       <div class="stats reveal d3">
         <div><b>79 %</b><span>trinken (fast) täglich Kaffee</span></div>
         <div><b>Platz 10</b><span>weltweit (4,8 kg/Kopf) – Nr. 1 ist Luxemburg mit 8,5 kg</span></div>
@@ -333,7 +339,7 @@ function sendStage() {
   if (!key) return;
   clearTimeout(stT);
   stT = setTimeout(() => {
-    const s = scenes[cur].id, body = { scene: s, sub: sub[s] }, j = JSON.stringify(body);
+    const s = scenes[cur].id, body = { scene: s, sub: sub[s], src: 'tafel' }, j = JSON.stringify(body);
     if (j === lastSent) return; lastSent = j;
     fetch(API + '/stage?key=' + encodeURIComponent(key), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: j })
       .then(r => { $('#sync').textContent = r.ok ? '📱 Handys folgen: ' + scenes[cur].dataset.title : '📱 Sync-Fehler'; })
@@ -488,9 +494,27 @@ async function refresh() {
     $('#poll1a').innerHTML = pollHTML('p1', latest.votes.p1, false);
     $('#poll2').innerHTML = pollHTML('p2', latest.votes.p2, false);
     $('#klasse1').innerHTML = $('#klasse2').innerHTML = klasse(latest.sim);
+    const st = latest.stage;
+    if (key && applied === null) applied = st ? st.t : 0;
+    else if (key && st && st.src === 'remote' && st.t > applied) {
+      applied = st.t;
+      const i = scenes.findIndex(s => s.id === st.scene);
+      if (i >= 0) { sub[st.scene] = Math.max(0, Math.min(st.sub, +scenes[i].dataset.steps - 1)); lastSent = ''; if (i !== cur) go(i); else render(st.scene); }
+    }
   } catch { $('#poll1a').innerHTML = $('#poll1a').innerHTML || '<p class="mut">Live-Abstimmung gerade nicht erreichbar.</p>'; }
 }
-refresh(); setInterval(() => { if (!document.hidden) refresh(); }, 2000);
+let applied = null;
+refresh(); setInterval(() => { if (!document.hidden) refresh(); }, key ? 800 : 2000);
+
+// Touch: Wischen + Tasten
+$('#tprev').onclick = () => step(-1); $('#tnext').onclick = () => step(1);
+let tx = null, ty = 0;
+addEventListener('touchstart', e => { const t = e.target; if (t.closest('input,button,.seg,#map,.qrcard,a')) { tx = null; return; } tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+addEventListener('touchend', e => {
+  if (tx === null) return;
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty; tx = null;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+}, { passive: true });
 
 if (key) { $('#admin').style.display = 'block'; $('#reset').onclick = async () => { if (confirm('Alle Stimmen löschen?')) { await fetch(API + '/reset?key=' + encodeURIComponent(key), { method: 'POST' }); refresh(); } }; }
 </script>

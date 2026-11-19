@@ -23,7 +23,8 @@ export class Room {
     }
     const a = this.sql.exec('SELECT COUNT(*) AS n, AVG(fair) AS fair, AVG(cup) AS cup, AVG(farmer) AS farmer FROM s').one();
     const st = this.sql.exec("SELECT v FROM kv WHERE k = 'stage'").toArray()[0];
-    return { stage: st ? JSON.parse(st.v) : null, votes, sim: { n: a.n, fair: a.fair || 0, cup: a.cup || 0, farmer: a.farmer || 0 } };
+    const rd = this.sql.exec("SELECT v FROM kv WHERE k = 'round'").toArray()[0];
+    return { round: rd ? rd.v : '0', stage: st ? JSON.parse(st.v) : null, votes, sim: { n: a.n, fair: a.fair || 0, cup: a.cup || 0, farmer: a.farmer || 0 } };
   }
   async fetch(req) {
     const p = new URL(req.url).pathname;
@@ -40,9 +41,10 @@ export class Room {
     } else if (req.method === 'POST' && p === '/stage') {
       const b = await req.json().catch(() => ({}));
       if (typeof b.scene !== 'string' || b.scene.length > 20 || !Number.isInteger(b.sub)) return json({ err: 'bad' }, 400);
-      this.sql.exec("INSERT INTO kv (k, v) VALUES ('stage', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", JSON.stringify({ scene: b.scene, sub: b.sub, t: Date.now() }));
+      this.sql.exec("INSERT INTO kv (k, v) VALUES ('stage', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", JSON.stringify({ scene: b.scene, sub: b.sub, src: b.src === 'remote' ? 'remote' : 'tafel', t: Date.now() }));
     } else if (req.method === 'POST' && p === '/reset') {
       this.sql.exec('DELETE FROM v'); this.sql.exec('DELETE FROM s'); this.sql.exec('DELETE FROM kv');
+      this.sql.exec("INSERT INTO kv (k, v) VALUES ('round', ?)", String(Date.now()));
     }
     return json(this.state());
   }
@@ -54,7 +56,7 @@ export default {
     const u = new URL(req.url);
     if (['/reset', '/stage'].includes(u.pathname) && u.searchParams.get('key') !== env.RESET_KEY) return json({ err: 'forbidden' }, 403);
     if (!['/state', '/vote', '/sim', '/reset', '/stage'].includes(u.pathname)) return json({ err: 'not found' }, 404);
-    const stub = env.ROOM.get(env.ROOM.idFromName('klasse'));
+    const stub = env.ROOM.get(env.ROOM.idFromName('klasse-v3'));
     return stub.fetch(req);
   },
 };
