@@ -4,6 +4,7 @@ const API = 'https://kaffee-weg.weltenbinder-server.workers.dev';
 const POLLS = {
   p1: { q: 'Von 8,06 € für 1 kg Kaffee – wie viel bekommt die Bäuerin / der Bauer?', o: ['ca. 0,40 €', 'ca. 1,50 €', 'ca. 3,00 €', 'ca. 4,50 €'], right: 0 },
   p2: { q: 'Wie viel mehr würdest du pro Tasse für wirklich fairen Kaffee zahlen?', o: ['nichts', 'bis 5 ct', 'bis 20 ct', '50 ct oder mehr'] },
+  p3: { q: 'Um wie viel ist der Börsenpreis für Kaffee von 2020 bis Anfang 2025 gestiegen?', o: ['+30 %', '+100 %', '+250 %', '+600 %'], right: 2 },
 };
 
 // Preisaufteilung 1 kg gemahlener Kaffee in DE (regenwald-schuetzen.org)
@@ -112,7 +113,7 @@ const KRITIK = [
 const SCENES = [
   { id: 'start', t: 'Start · Schätzfrage', n: 1 }, { id: 'konsum', t: 'Konsum & Nachfrage', n: 2 },
   { id: 'kette', t: 'Wertschöpfungskette', n: 8 }, { id: 'sim', t: 'Simulator', n: 1 },
-  { id: 'kritik', t: 'Kritik', n: 3 }, { id: 'preis', t: 'Kaffeepreis', n: 4 }, { id: 'handeln', t: 'Was tun?', n: 1 },
+  { id: 'kritik', t: 'Kritik', n: 3 }, { id: 'preis', t: 'Kaffeepreis', n: 5 }, { id: 'handeln', t: 'Was tun?', n: 1 },
   { id: 'abst', t: 'Abstimmung', n: 1 }, { id: 'ende', t: 'Fazit & Lernzettel', n: 1 },
 ];
 

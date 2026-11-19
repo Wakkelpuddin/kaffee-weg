@@ -124,6 +124,8 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
 /* 5 · Preis */
 .pchart { width: 100%; display: block; touch-action: pan-y; }
 .pline { stroke-dasharray: 3000; stroke-dashoffset: 3000; }
+#preis.guess .pline { stroke-dashoffset: 3000 !important; transition: none !important; } #preis.guess .parea { opacity: 0 !important; transition: none !important; }
+#preis.guess .pstat span, #preis.guess .beans, #preis.guess #beansl { visibility: hidden; }
 #preis.in .pline { transition: stroke-dashoffset 3.2s cubic-bezier(.4,0,.2,1) .4s; stroke-dashoffset: 0; }
 .parea { opacity: 0; transition: opacity 1.2s 2.6s; } #preis.in .parea { opacity: 1; }
 .pmarks g { animation: pop .6s cubic-bezier(.2,1.6,.4,1) both; transform-box: fill-box; transform-origin: center; }
@@ -298,7 +300,7 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
 </section>
 
 <!-- 5 · PREIS -->
-<section class="scene" id="preis" data-title="Kaffeepreis" data-steps="4">
+<section class="scene" id="preis" data-title="Kaffeepreis" data-steps="5">
   <div>
     <div class="kicker reveal">5 · Der Kaffeepreis explodiert</div>
     <h2 class="reveal d1" style="margin:.2em 0 3vh">Kaffee war noch nie so teuer</h2>
@@ -524,9 +526,21 @@ const PEV = [
   { w: 'Warum so teuer?', h: 'Vier Gründe', x: '<div class="why4"><div>🌡️ <b>Klimawandel</b> – Hitze, Dürre, Starkregen (Hauptgrund)</div><div>📈 <b>Nachfrage</b> aus China und Indien steigt</div><div>🚢 <b>Fracht</b> – Umwege ums Rote Meer</div><div>💹 <b>Spekulation</b> &amp; Vorräte – Angst vor US-Zöllen und EU-Entwaldungsgesetz</div></div>' },
 ];
 function preis(k) {
+  $('#preis').classList.toggle('guess', k === 0);
+  if (k === 0) {
+    $('#pnum').textContent = '?';
+    $('#pev').innerHTML = '<div class="when">Schätzt auf dem Handy!</div><h3>' + POLLS.p3.q + '</h3><div id="poll3" class="poll"></div>';
+    if (latest) $('#poll3').innerHTML = pollHTML('p3', latest.votes.p3, false);
+    $('#pchart .pmarks').innerHTML = $('#pchart .pband').innerHTML = '';
+    return;
+  }
+  k = k - 1;
+  if (pCounted) $('#pnum').textContent = '+252 %';
   if (!pCounted) { pCounted = true; const t0 = performance.now(); (function f(t) { const p = Math.min(1, (t - t0) / 3600), e = 1 - Math.pow(1 - p, 3); $('#pnum').textContent = '+' + Math.round(252 * e) + ' %'; if (p < 1) requestAnimationFrame(f); })(t0); }
   const e = PEV[k];
-  $('#pev').innerHTML = `<div class="when">${e.w}</div><h3>${e.h}</h3><div>${e.x}</div>`;
+  let g = '';
+  if (k === 0 && latest) { const v = latest.votes.p3, n = v.reduce((a, b) => a + b, 0); if (n) g = `<p class="mut" style="margin-top:.6em">Richtig ist <b>+250 %</b> – ${Math.round(v[2] / n * 100)} % von euch lagen richtig.</p>`; }
+  $('#pev').innerHTML = `<div class="when">${e.w}</div><h3>${e.h}</h3><div>${e.x}</div>${g}`;
   $('#pchart .pmarks').innerHTML = PEV.slice(1, k + 1).filter(v => v.m !== undefined).map(v => {
     const X = PC.X(v.m), Y = PC.Y(KPREIS[v.m]), right = v.m > 40;
     return `<g><circle cx="${X}" cy="${Y}" r="11" fill="#170d08" stroke="#f6ead8" stroke-width="4"/><text x="${right ? X - 16 : X}" y="${Y - 20}" text-anchor="${right ? 'end' : 'middle'}" fill="#f6ead8" font-size="17" font-weight="700">${v.h} · ${fmt(KPREIS[v.m])} $</text></g>`;
@@ -561,6 +575,7 @@ async function refresh() {
     latest = await api('/state');
     $('#poll1a').innerHTML = pollHTML('p1', latest.votes.p1, false);
     $('#poll2').innerHTML = pollHTML('p2', latest.votes.p2, false);
+    if ($('#poll3')) $('#poll3').innerHTML = pollHTML('p3', latest.votes.p3, false);
     $('#klasse1').innerHTML = $('#klasse2').innerHTML = klasse(latest.sim);
     const st = latest.stage;
     if (key && applied === null) applied = st ? st.t : 0;

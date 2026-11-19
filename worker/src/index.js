@@ -1,5 +1,5 @@
 // Live-Abstimmung für "Der Weg bis zur Tasse": zählt Stimmen + Simulator-Ergebnisse.
-const POLLS = { p1: 4, p2: 4 };
+const POLLS = { p1: 4, p2: 4, p3: 4 };
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
@@ -56,7 +56,7 @@ export default {
     const u = new URL(req.url);
     if (['/reset', '/stage'].includes(u.pathname) && u.searchParams.get('key') !== env.RESET_KEY) return json({ err: 'forbidden' }, 403);
     if (!['/state', '/vote', '/sim', '/reset', '/stage'].includes(u.pathname)) return json({ err: 'not found' }, 404);
-    const stub = env.ROOM.get(env.ROOM.idFromName('klasse-v3'));
+    const stub = env.ROOM.get(env.ROOM.idFromName('klasse-v4'));
     return stub.fetch(req);
   },
 };
