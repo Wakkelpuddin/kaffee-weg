@@ -6,7 +6,7 @@
 <title>Der Weg bis zur Tasse</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=8">
 <style>
 html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
 body { font-size: clamp(15px, 1.15vw, 22px); }
@@ -367,7 +367,7 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
 </section>
 </main>
 
-<script src="shared.js"></script>
+<script src="shared.js?v=8"></script>
 <script>
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const SITE = location.href.replace(/[^/]*([?#].*)?$/, '');

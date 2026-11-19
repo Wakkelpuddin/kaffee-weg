@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <title>Fernbedienung · Der Weg bis zur Tasse</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=8">
 <style>
 html, body { height: 100%; }
 body { display: flex; flex-direction: column; padding: 16px; gap: 14px; max-width: 900px; margin: 0 auto; user-select: none; -webkit-user-select: none; }
@@ -37,7 +37,7 @@ body { display: flex; flex-direction: column; padding: 16px; gap: 14px; max-widt
   <div class="list" id="list"></div>
   <div class="foot"><span class="mut sm">Die Tafel-Seite muss mit ?admin=… geöffnet sein.</span><button id="reset">Abstimmungen zurücksetzen</button></div>
 </div>
-<script src="shared.js"></script>
+<script src="shared.js?v=8"></script>
 <script>
 const $ = s => document.querySelector(s);
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
